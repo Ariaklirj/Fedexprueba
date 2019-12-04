@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'srenvio.deliveries',
+    'srenvio.base',
 ]
 
 MIDDLEWARE = [
@@ -84,8 +85,6 @@ DATABASES = {
         "PORT": os.environ.get("DB_PORT", None),
     }
 }
-
-
 
 
 # Password validation

@@ -2,7 +2,6 @@ import io
 import json
 
 from django.http import HttpResponse
-from django.shortcuts import render
 from reportlab.pdfgen import canvas
 from rest_framework.views import APIView
 
@@ -72,6 +71,17 @@ def _create_pdf(deliveries, tracking_errors):
     return buffer
 
 
+def _create_empty_pdf():
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+    p.drawString(
+        100, 780, "No se ha generado ningun reporte de sobre peso aún")
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer
+
+
 class DeliveryList(APIView):
     def post(self, request):
         file = request.FILES.get("json_file", None)
@@ -81,7 +91,7 @@ class DeliveryList(APIView):
         else:
             data = request.data
         deliveries = []
-        tracking_errors = [] 
+        tracking_errors = []
         for package in data:
             delivery_object = Delivery.objects.filter(
                 tracking_number=package['tracking_number']).first()
@@ -89,7 +99,7 @@ class DeliveryList(APIView):
 
                 full_parcel = _getFullParcel(
                     package['parcel'], package['tracking_number'])
-               
+
                 if full_parcel is not None:
                     package['tracking_number'] = str(
                         package['tracking_number'])
@@ -111,7 +121,29 @@ class DeliveryList(APIView):
 
         filename = "report.pdf"
         response = HttpResponse(pdf, content_type="application/pdf")
-        response["Content-Disposition"] = 'attachment; filename="' + filename + '"'
+        response["Content-Disposition"] = 'attachment; filename="' + \
+            filename + '"'
 
-       
+        return response
+
+    def get(self, request):
+        delivery_object = Delivery.objects.all()
+
+        if delivery_object:
+            delivery_instance = DeliveryReadSerializer(
+                delivery_object, many=True).data
+            pdf = _create_pdf(delivery_instance, [])
+
+            filename = "report.pdf"
+            response = HttpResponse(pdf, content_type="application/pdf")
+            response["Content-Disposition"] = 'attachment; filename="' + \
+                filename + '"'
+            return response
+
+        pdf = _create_empty_pdf()
+
+        filename = "report.pdf"
+        response = HttpResponse(pdf, content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="' + \
+            filename + '"'
         return response
