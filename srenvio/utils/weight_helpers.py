@@ -12,6 +12,5 @@ def getTotalWeight(weight, length, width, height):
 
 def getOverWeight(total_weight, real_weight):
     over_weight = real_weight-total_weight
-    over_weight=over_weight*(-1)
-
+   
     return 0 if over_weight < 0 else math.ceil(over_weight)
